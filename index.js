@@ -1,15 +1,14 @@
 const express = require("express");
-const fs = require("fs");
 const path = require("path");
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
-const userRoutes = require("./Routes/userRoutes");
 const connectToDB = require("./configs/db");
 const eventRouter = require("./Routes/eventRoutes");
 const auth = require("./middlewares/auth");
 const userRouter = require("./Routes/userRoutes");
 const cors = require("cors");
 const { swaggerUi, swaggerDocs } = require("./configs/jsdoc");
+const logger = require("./logs/logs");
 require("dotenv").config();
 
 const Port = process.env.PORT;
@@ -34,12 +33,11 @@ app.use(bodyParser.json());
 //     res.send('This is a Application')
 // })
 
-const accessLogStream = fs.createWriteStream(
-  path.join(__dirname, "access.log"),
-  { flags: "a" }
-);
-app.use(morgan("combined", { stream: accessLogStream }));
-
+// const accessLogStream = fs.createWriteStream(
+//   path.join(__dirname, "access.log"),
+//   { flags: "a" }
+// );
+// app.use(morgan("combined", { stream: accessLogStream }));
 
 app.use("/api", auth, eventRouter);
 app.use("/users", userRouter);
@@ -49,10 +47,11 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 // console.log(Port)
 app.listen(Port, async () => {
   try {
-    connectToDB(DB);
+    await connectToDB(DB);
     console.log("Successfully connected with database");
     console.log(`Server is running on http://localhost:${Port}`);
   } catch (err) {
+    logger.log('error', err.message)
     console.log(err);
   }
 });

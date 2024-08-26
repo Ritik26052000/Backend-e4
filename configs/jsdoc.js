@@ -1,23 +1,23 @@
 // backend/swagger.js
-const swaggerJsDoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
+const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
 const swaggerOptions = {
   swaggerDefinition: {
-    openapi: '3.0.0',
+    openapi: "3.0.0",
     info: {
-      title: 'Community Center API',
-      version: '1.0.0',
-      description: 'API documentation for Community Center application',
+      title: "Community Center API",
+      version: "1.0.0",
+      description: "API documentation for Community Center application",
     },
     servers: [
       {
-        url: 'http://localhost:8080',
-        description: 'Local server',
+        url: "http://localhost:9090",
+        description: "Local server",
       },
     ],
   },
-  apis: ['./routes/*.js'], // Define the path where your routes are defined
+  apis: ["./routes/*.js"], // Define the path where your routes are defined
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);

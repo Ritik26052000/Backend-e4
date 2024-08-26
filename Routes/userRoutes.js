@@ -7,6 +7,7 @@ const registerModel = require("../models/registerModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const blackListModel = require("../models/blackListModel");
+const logger = require("../logs/logs");
 
 const userRouter = express.Router();
 
@@ -79,6 +80,7 @@ userRouter.post("/signup", upload.single("profilePicture"), (req, res) => {
     res.redirect("/users");
   } catch (err) {
     res.status(400).send(err);
+    logger.log("error", "server error : ", err);
   }
 });
 
@@ -101,6 +103,7 @@ userRouter.get("/", (req, res) => {
     res.send(users);
   } catch (err) {
     res.status(400).send(err);
+    logger.log("error", "server error : ", err);
   }
 });
 
@@ -150,6 +153,7 @@ userRouter.post("/update/:id", upload.single("profilePicture"), (req, res) => {
     res.redirect("/users");
   } catch (err) {
     res.status(400).send(err);
+    logger.log("error", "server error : ", err);
   }
 });
 
@@ -179,6 +183,7 @@ userRouter.post("/delete/:id", (req, res) => {
     res.redirect("/users");
   } catch (err) {
     res.status(400).send(err);
+    logger.log("error", "server error : ", err);
   }
 });
 
@@ -226,6 +231,7 @@ userRouter.post(
       res.redirect("/users");
     } catch (err) {
       res.status(400).send(err);
+      logger.log("error", "server error : ", err);
     }
   }
 );
@@ -277,9 +283,11 @@ userRouter.post("/register", async (req, res) => {
         password: hash,
       });
       res.status(201).json({ message: "user is registerd successfully" });
+      logger.log("info", "user register successfully");
     });
   } catch (err) {
     res.status(500).json({ message: "Internal server error" });
+    logger.log("error", "server error : ", err);
   }
 });
 
@@ -309,8 +317,11 @@ userRouter.post("/register", async (req, res) => {
  *         description: Internal server error.
  */
 
+let email = "";
+let password = "";
 userRouter.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  email = req.body.email;
+  password = req.body.password;
   console.log(email, password);
 
   try {
@@ -327,7 +338,7 @@ userRouter.post("/login", async (req, res) => {
       if (result) {
         jwt.sign(payload, process.env.SECRET_KEY, (err, token) => {
           if (err) console.log(err);
-          console.log(err);
+          logger.log("info","user logged in successfully" );
           return res.status(200).json({ token: token, role: check.role });
         });
       } else {
@@ -338,6 +349,7 @@ userRouter.post("/login", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: "Internal server error" });
+    logger.log("error", "server error : ", err);
   }
 });
 
@@ -358,11 +370,23 @@ userRouter.get("/logout", async (req, res) => {
   try {
     const header = req.headers.authorization;
     if (!header) {
+      logger.log("error", "token not present");
       return res.json({ message: "token header is not present" });
     }
     const token = header.split(" ")[1];
+    logger.log("info", "user logout");
     const blacklist = await blackListModel.create({ token });
     res.status(200).json({ message: "user is logout successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Internal server error" });
+    logger.log("error", "server error : ", err);
+  }
+});
+
+userRouter.get("/profile", async (req, res) => {
+  try {
+    const userInfo = await registerModel.findOne({ email: email });
+    res.status(200).json({ userData: userInfo });
   } catch (err) {
     res.status(500).json({ message: "Internal server error" });
   }

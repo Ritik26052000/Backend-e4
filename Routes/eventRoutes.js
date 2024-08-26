@@ -2,6 +2,7 @@ const { Router } = require("express");
 const registerModel = require("../models/registerModel");
 const role = require("../middlewares/role");
 const Event = require("../models/eventModel");
+const logger = require("../logs/logs");
 
 const eventRouter = Router();
 let user;
@@ -43,6 +44,7 @@ eventRouter.get("/events", async (req, res) => {
       //   name: event.name,
       //   attendeesCount: event.attendees.length,
       // }));
+      logger.log("info", "user search for events ");
       res.status(200).json(events);
     } else {
       const events = await Event.find({ userId: user._id }).populate(
@@ -57,6 +59,7 @@ eventRouter.get("/events", async (req, res) => {
     }
   } catch (err) {
     console.log(err);
+    logger.log("error", "server error : ", err);
   }
 });
 
@@ -91,8 +94,10 @@ eventRouter.get("/events/created/:userId", async (req, res) => {
   try {
     const events = await Event.find({ createdBy: req.params.userId });
     res.status(200).json(events);
+    logger.log("info", "events by specific user");
   } catch (err) {
     console.log(err);
+    logger.log("error", "server error : ", err);
   }
 });
 
@@ -127,8 +132,10 @@ eventRouter.get("/events/registered/:userId", async (req, res) => {
       "date"
     );
     res.status(200).json(events);
+    logger.info("event a specific user registered for ");
   } catch (err) {
     console.log(err);
+    logger.log("error", "server error : ", err);
   }
 });
 
@@ -164,6 +171,7 @@ eventRouter.get("/events/capacity/:userId", async (req, res) => {
     res.json({ percentageFilled });
   } catch (err) {
     console.log(err);
+    logger.log("error", "server error : ", err);
   }
 });
 
@@ -207,6 +215,7 @@ eventRouter.get("/events/aggregate", async (req, res) => {
     res.json(aggregateData);
   } catch (err) {
     console.log(err);
+    logger.log("error", "server error : ", err);
   }
 });
 
@@ -414,6 +423,7 @@ eventRouter.post(
     } catch (err) {
       console.error("Error creating event:", err);
       res.status(500).json({ message: "Internal Server Error" });
+      logger.log("error", "server error : ", err);
     }
   }
 );
@@ -471,6 +481,7 @@ eventRouter.get("/events/:eventId", async (req, res) => {
     // Log error and send internal server error response
     console.error("Error fetching event details:", err);
     res.status(500).json({ message: "Internal Server Error" });
+    logger.log("error", "server error : ", err);
   }
 });
 module.exports = eventRouter;
