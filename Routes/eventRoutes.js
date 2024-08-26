@@ -3,6 +3,7 @@ const registerModel = require("../models/registerModel");
 const role = require("../middlewares/role");
 const Event = require("../models/eventModel");
 const logger = require("../logs/logs");
+const sendEmail = require("../services/email");
 
 const eventRouter = Router();
 let user;
@@ -38,12 +39,7 @@ eventRouter.get("/events", async (req, res) => {
   try {
     user = await registerModel.findOne({ email: req.user.email });
     if (user.role) {
-      // if (user.role === "admin" || user.role === "organizer") {
       const events = await Event.find({});
-      // const eventDetails = events.map((event) => ({
-      //   name: event.name,
-      //   attendeesCount: event.attendees.length,
-      // }));
       logger.log("info", "user search for events ");
       res.status(200).json(events);
     } else {
@@ -243,6 +239,7 @@ eventRouter.post("/events/register/:eventId", async (req, res) => {
   console.log(req.params.eventId);
   const event = await Event.findById(req.params.eventId);
   const userId = user._id;
+  const user_email = user.email;
 
   if (event.attendees.includes(userId)) {
     return res
@@ -256,13 +253,18 @@ eventRouter.post("/events/register/:eventId", async (req, res) => {
 
   event.attendees.push(userId);
 
-  console.log(event.attendees);
-
   if (event.dynamicPricing) {
     event.ticketPrice += 40;
   }
 
   await event.save();
+
+  sendEmail(
+    user_email,
+    `Registration succesfull for the ${event.name} event`,
+    "hii",
+    `This mail is regarding the registration for the event ${event.name}`
+  );
   res.json({ message: "Registration successfull" });
 });
 
@@ -389,8 +391,6 @@ eventRouter.post(
       const userData = await registerModel.findOne({ email: user_email });
       const userId = userData._id;
 
-      console.log("143 eventroutes", userId);
-
       if (!name || !date || !capacity || !ticketPrice) {
         return res.status(400).json({ message: "Missing required fields" });
       }
@@ -399,7 +399,6 @@ eventRouter.post(
           .status(400)
           .json({ message: "Capacity must be a positive number" });
       }
-
       if (isNaN(ticketPrice) || ticketPrice < 0) {
         return res
           .status(400)
@@ -416,7 +415,6 @@ eventRouter.post(
       });
 
       await newEvent.save();
-
       res
         .status(201)
         .json({ message: "Event created Successfully", event: newEvent });

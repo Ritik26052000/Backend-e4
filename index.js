@@ -10,10 +10,17 @@ const cors = require("cors");
 const { swaggerUi, swaggerDocs } = require("./configs/jsdoc");
 const logger = require("./logs/logs");
 require("dotenv").config();
+const socketIo = require('socket.io');
+const http = require('http');
 
 const Port = process.env.PORT;
 const DB = process.env.MONGODB_URL;
 const app = express();
+
+const server = http.createServer(app);
+
+const io = socketIo(server);
+
 
 //middleware
 app.use(express.json());
@@ -43,6 +50,10 @@ app.use("/api", auth, eventRouter);
 app.use("/users", userRouter);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+io.on('connection', (socket)=>{
+  console.log('A user is connected');
+})
 
 // console.log(Port)
 app.listen(Port, async () => {
