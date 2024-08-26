@@ -2,7 +2,7 @@ const { mongoose } = require("mongoose");
 
 const eventSchema = new mongoose.Schema({
   name: String,
-  data: Date,
+  data: String,
   capacity: Number,
   attendees: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

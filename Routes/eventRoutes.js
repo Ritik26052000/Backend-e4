@@ -61,44 +61,6 @@ eventRouter.get("/events", async (req, res) => {
 
 /**
  * @swagger
- * /events/created/{userId}:
- *   get:
- *     summary: Retrieve all events created by a specific user
- *     tags: [Events]
- *     parameters:
- *       - in: path
- *         name: userId
- *         schema:
- *           type: string
- *         required: true
- *         description: ID of the user
- *     responses:
- *       200:
- *         description: List of events created by the user.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Event'
- *       500:
- *         description: Internal Server Error.
- */
-
-// Retrieve all events created by a specific user
-eventRouter.get("/events/created/:userId", async (req, res) => {
-  try {
-    const events = await Event.find({ createdBy: req.params.userId });
-    res.status(200).json(events);
-    logger.log("info", "events by specific user");
-  } catch (err) {
-    console.log(err);
-    logger.log("error", "server error : ", err);
-  }
-});
-
-/**
- * @swagger
  * /events/registered/{userId}:
  *   get:
  *     summary: Retrieve all the events a specific user registered for, sorted by date
@@ -389,6 +351,7 @@ eventRouter.post(
       const { name, date, capacity, ticketPrice, dynamicPricing } = req.body;
       const user_email = req.user.email;
       const userData = await registerModel.findOne({ email: user_email });
+      const allUserEmail = await registerModel.find({ email });
       const userId = userData._id;
 
       if (!name || !date || !capacity || !ticketPrice) {
@@ -414,7 +377,17 @@ eventRouter.post(
         createdBy: userId,
       });
 
+      console.log(newEvent);
+
       await newEvent.save();
+      allUserEmail.map((email) => {
+        sendEmail(
+          email,
+          "new event",
+          "Hello!",
+          `Are you willing to join the new event ${newEvent.name}`
+        );
+      });
       res
         .status(201)
         .json({ message: "Event created Successfully", event: newEvent });

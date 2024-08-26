@@ -21,6 +21,26 @@ const server = http.createServer(app);
 
 const io = socketIo(server);
 
+let pollData = {
+  question: "what is your favorite programming language?",
+  options: {JavaScript: 0, Python: 0, Ruby:0},
+}
+
+let questions = [];
+let feedbackList = [];
+
+io.on('connection', (socket)=>{
+  console.log("A user connnected:", socket.id);
+
+  socket.emit('pollData', pollData);
+
+  socket.on('vote', (vote)=>{
+    pollData.options[vote.option]++;
+    io.emit('pollData', pollData);
+  })
+
+})
+
 
 //middleware
 app.use(express.json());
